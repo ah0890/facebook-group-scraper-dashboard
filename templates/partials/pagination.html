@@ -1,0 +1,27 @@
+{% load dashboard_tags %}
+{% if page.paginator.num_pages > 1 %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 px-3 py-3 border-top">
+  <div class="text-muted small">
+    Showing {{ page.start_index }}–{{ page.end_index }} of {{ page.paginator.count }}
+  </div>
+  <ul class="pagination pagination-sm">
+    {% if page.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% query_transform page=1 %}" aria-label="First">&laquo;</a></li>
+      <li class="page-item"><a class="page-link" href="?{% query_transform page=page.previous_page_number %}">Prev</a></li>
+    {% endif %}
+    {% for num in page.paginator.get_elided_page_range %}
+      {% if num == page.number %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num == page.paginator.ELLIPSIS %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% else %}
+        <li class="page-item"><a class="page-link" href="?{% query_transform page=num %}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if page.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% query_transform page=page.next_page_number %}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="?{% query_transform page=page.paginator.num_pages %}" aria-label="Last">&raquo;</a></li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}

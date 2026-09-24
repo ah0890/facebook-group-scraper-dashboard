@@ -1,0 +1,36 @@
+{% load dashboard_tags humanize %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Run ID</th>
+        <th>Started</th>
+        <th>Finished</th>
+        <th class="text-end">Groups</th>
+        <th class="text-end">Posts</th>
+        <th>Status</th>
+        <th>Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+        <tr>
+          <td><a href="{% url 'run_detail' run.pk %}" class="fw-semibold">#{{ run.pk }}</a>
+            {% if run.mode == 'mock' %}<span class="badge badge-soft-info ms-1">mock</span>{% endif %}</td>
+          <td class="text-nowrap">{{ run.started_at|date:"M d, H:i" }}</td>
+          <td class="text-nowrap">{% if run.finished_at %}{{ run.finished_at|date:"M d, H:i" }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="text-end num" title="{{ run.completed_groups }} completed · {{ run.failed_groups }} failed · {{ run.skipped_groups }} skipped">
+            {{ run.completed_groups }}/{{ run.total_groups }}
+          </td>
+          <td class="text-end num">{{ run.total_posts|intcomma }}</td>
+          <td>
+            <span class="badge {{ run.status|badge_class }}{% if run.status == 'RUNNING' %} badge-running{% endif %}">{{ run.get_status_display }}</span>
+          </td>
+          <td class="text-nowrap num">{{ run.duration|duration }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><i class="bi bi-clock-history"></i>No scraper runs yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Edit {{ group.name }}{% endblock %}
+{% block page_title %}Edit group{% endblock %}
+{% block page_subtitle %}<div class="subtitle">{{ group.name }}</div>{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include "dashboard/_group_fields.html" %}
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Save changes</button>
+            <a href="{% url 'groups' %}" class="btn btn-light">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Activity</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-6 text-muted fw-normal">Status</dt>
+          <dd class="col-6">{% status_badge group.last_status group.get_last_status_display %}</dd>
+          <dt class="col-6 text-muted fw-normal">Posts collected</dt>
+          <dd class="col-6 num">{{ group.total_posts|intcomma }}</dd>
+          <dt class="col-6 text-muted fw-normal">Last run</dt>
+          <dd class="col-6">{{ group.last_run_at|default:"Never" }}</dd>
+          <dt class="col-6 text-muted fw-normal">Rounds completed</dt>
+          <dd class="col-6 num">{{ group.completed_round }}</dd>
+          <dt class="col-6 text-muted fw-normal">Added</dt>
+          <dd class="col-6">{{ group.created_at|date:"M d, Y" }}</dd>
+        </dl>
+        {% if group.last_error %}<div class="alert alert-danger small mt-3 mb-0">{{ group.last_error }}</div>{% endif %}
+        <a href="{% url 'posts' %}?group={{ group.pk }}" class="btn btn-light btn-sm mt-3"><i class="bi bi-card-text"></i> View posts</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

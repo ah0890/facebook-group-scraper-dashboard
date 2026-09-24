@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Run Scraper{% endblock %}
+{% block page_title %}Run Scraper{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Start, stop and monitor scraper runs in real time</div>{% endblock %}
+
+{% block content %}
+<div id="run-page"
+     data-run-id="{{ latest_run.pk|default:'' }}"
+     data-active="{% if active_run %}1{% else %}0{% endif %}"
+     data-start-url="{% url 'run_start' %}"
+     data-stop-url="{% url 'run_stop' %}">
+
+  <!-- Controls ---------------------------------------------------------- -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+        <div class="control-bar">
+          <form method="post" action="{% url 'run_start' %}" data-run-action="start">
+            {% csrf_token %}
+            <button class="btn btn-primary" type="submit" data-btn-start {% if active_run %}disabled{% endif %}>
+              <i class="bi bi-play-fill"></i> Start Scraper
+            </button>
+          </form>
+          <form method="post" action="{% url 'run_stop' %}" data-run-action="stop">
+            {% csrf_token %}
+            <button class="btn btn-danger" type="submit" data-btn-stop {% if not active_run %}disabled{% endif %}>
+              <i class="bi bi-stop-fill"></i> Stop Scraper
+            </button>
+          </form>
+          <form method="post" action="{% url 'run_reset_settings' %}"
+                data-confirm="Replace the current scraper settings with your saved defaults?">
+            {% csrf_token %}
+            <button class="btn btn-light" type="submit"><i class="bi bi-arrow-counterclockwise"></i> Reset to Defaults</button>
+          </form>
+          <a href="{% url 'settings' %}" class="btn btn-light"><i class="bi bi-gear"></i> Configure Settings</a>
+        </div>
+        <div class="phase-display">
+          <span class="text-muted small fw-semibold text-uppercase">Phase</span>
+          <span class="phase-badge{% if active_run %} phase-active{% endif %}" data-phase>
+            {% if active_run %}{{ active_run.current_phase }}{% else %}IDLE{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="mt-3" data-run-summary {% if not latest_run %}hidden{% endif %}>
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <div class="small">
+            <a href="{% if latest_run %}{% url 'run_detail' latest_run.pk %}{% endif %}" class="fw-semibold" data-run-link>Run #<span data-run-number>{{ latest_run.pk }}</span></a>
+            <span class="badge {{ latest_run.status|badge_class }} ms-1" data-run-status>{{ latest_run.get_status_display }}</span>
+            <span class="text-muted ms-2" data-current-group>{% if active_run.current_group %}Now: {{ active_run.current_group.name }}{% endif %}</span>
+          </div>
+          <div class="run-counters">
+            <span>Completed <strong data-count="groups">{{ latest_run.completed_groups }}/{{ latest_run.total_groups }}</strong></span>
+            <span>Failed <strong data-count="failed">{{ latest_run.failed_groups }}</strong></span>
+            <span>Skipped <strong data-count="skipped">{{ latest_run.skipped_groups }}</strong></span>
+            <span>New posts <strong data-count="posts">{{ latest_run.total_posts }}</strong></span>
+            <span>Duplicates <strong data-count="duplicates">{{ latest_run.duplicate_posts }}</strong></span>
+            <span>Elapsed <strong data-count="duration">{{ latest_run.duration|duration }}</strong></span>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-bar" data-progress style="width: {{ latest_run.progress_percent|default:0 }}%"></div></div>
+        <div class="alert alert-warning small mt-3 mb-0" data-run-error {% if not latest_run.error_message %}hidden{% endif %}>{{ latest_run.error_message }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Left column: batch + session -------------------------------------- -->
+    <div class="col-xl-6">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h2 class="card-title">{% if active_run %}Current Batch{% else %}Next Batch{% endif %}</h2>
+          <span class="header-actions small text-muted">{{ setting.groups_per_run }} groups per run</span>
+        </div>
+        <div class="card-body pb-2">
+          {% if active_run %}
+            <div class="next-batch-message">Round #{{ active_run.round_number }} · run #{{ active_run.pk }} is processing {{ active_run.total_groups }} group{{ active_run.total_groups|pluralize }}.</div>
+          {% else %}
+            <div class="next-batch-message">{{ batch.message }}</div>
+          {% endif %}
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>#</th><th>Group / URL</th><th>Last run</th><th class="text-end">Status</th></tr></thead>
+            <tbody data-batch-table>
+              {% if active_run %}
+                {% for rg in run_groups %}
+                  <tr data-rg-id="{{ rg.pk }}">
+                    <td class="row-num">{{ rg.position }}</td>
+                    <td class="url-cell">
+                      <div class="fw-semibold">{{ rg.group.name }}</div>
+                      <a href="{{ rg.group.facebook_url }}" target="_blank" rel="noopener noreferrer" class="small" title="{{ rg.group.facebook_url }}">{{ rg.group.facebook_url|short_url }}</a>
+                    </td>
+                    <td class="small text-nowrap" data-rg-posts>{% if rg.posts_collected %}{{ rg.posts_collected }} new{% else %}{{ rg.group.last_run_at|naturaltime|default:"Never" }}{% endif %}</td>
+                    <td class="text-end"><span class="badge {{ rg.status|badge_class }}{% if rg.status == 'RUNNING' %} badge-running{% endif %}" data-rg-status title="{{ rg.error_message }}">{{ rg.get_status_display }}</span></td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                {% for group in batch.groups %}
+                  <tr>
+                    <td class="row-num">{{ forloop.counter }}</td>
+                    <td class="url-cell">
+                      <div class="fw-semibold">{{ group.name }}</div>
+                      <a href="{{ group.facebook_url }}" target="_blank" rel="noopener noreferrer" class="small" title="{{ group.facebook_url }}">{{ group.facebook_url|short_url }}</a>
+                    </td>
+                    <td class="small text-nowrap">{% if group.last_run_at %}{{ group.last_run_at|naturaltime }}{% else %}<span class="text-muted">Never</span>{% endif %}</td>
+                    <td class="text-end"><span class="badge {{ group.last_status|badge_class }}" title="{{ group.last_error }}">{{ group.get_last_status_display }}</span></td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4"><div class="empty-state"><i class="bi bi-people"></i>No enabled groups. <a href="{% url 'groups' %}?add=1">Add a group</a>.</div></td></tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mb-3" id="session-card" data-auth-url="{% url 'browser_authenticate' %}" data-check-url="{% url 'browser_check' %}">
+        <div class="card-header">
+          <h2 class="card-title"><i class="bi bi-shield-check"></i> Browser session</h2>
+        </div>
+        <div class="card-body">
+          <div class="session-status">
+            <span class="badge {{ session.status|badge_class }}" data-session-status>{{ session.get_status_display }}</span>
+            <span class="small text-muted" data-session-checked>{% if session.checked_at %}checked {{ session.checked_at|naturaltime }}{% endif %}</span>
+          </div>
+          <div class="session-message" data-session-message>{{ session.message|default:"Session status has not been checked yet." }}</div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-primary btn-sm" type="button" data-browser-task="auth" {% if browser_busy or active_run %}disabled{% endif %}>
+              <i class="bi bi-box-arrow-in-right"></i> Open Browser / Authenticate
+            </button>
+            <button class="btn btn-light btn-sm" type="button" data-browser-task="check" {% if browser_busy or active_run %}disabled{% endif %}>
+              <i class="bi bi-arrow-repeat"></i> Check session
+            </button>
+          </div>
+          <p class="small text-muted mt-3 mb-0">
+            {% if setting.scraper_mode == 'mock' %}
+              Mock mode is active, so no Facebook login is needed.
+            {% else %}
+              A visible Chromium window opens with the persistent profile. Log in to Facebook yourself; the session is
+              kept in <code>{{ setting.profile_dir }}</code> and reused by later runs. Credentials are never stored by this app.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Active settings</h2>
+          <a href="{% url 'settings' %}" class="header-actions small">Edit</a></div>
+        <div class="card-body small">
+          <div class="row g-2">
+            <div class="col-6 text-muted">Mode</div><div class="col-6 fw-semibold">{{ setting.get_scraper_mode_display }}</div>
+            <div class="col-6 text-muted">Posts per group</div><div class="col-6 fw-semibold">{{ setting.posts_per_group }}</div>
+            <div class="col-6 text-muted">Groups per run</div><div class="col-6 fw-semibold">{{ setting.groups_per_run }}</div>
+            <div class="col-6 text-muted">Scroll limit / delay</div><div class="col-6 fw-semibold">{{ setting.scroll_limit }} × {{ setting.scroll_delay }}s</div>
+            <div class="col-6 text-muted">Retries</div><div class="col-6 fw-semibold">{{ setting.retry_count }}</div>
+            <div class="col-6 text-muted">Browser</div><div class="col-6 fw-semibold">Chromium, {% if setting.headless %}headless{% else %}visible{% endif %}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: live logs ------------------------------------------- -->
+    <div class="col-xl-6">
+      {% include "partials/terminal.html" with title="Live Logs" live=True %}
+    </div>
+  </div>
+</div>
+{% endblock %}

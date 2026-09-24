@@ -1,0 +1,16 @@
+<div class="terminal" data-terminal {% if run_id %}data-run-id="{{ run_id }}"{% endif %} {% if live %}data-live{% endif %}>
+  <div class="terminal-header">
+    <span class="dots"><span></span><span></span><span></span></span>
+    <span><i class="bi bi-terminal"></i> {{ title|default:"Logs" }}</span>
+    <span class="live-indicator ms-2" data-live-indicator hidden>LIVE</span>
+    <div class="terminal-actions">
+      <label class="small d-flex align-items-center gap-1 mb-0" title="Keep scrolled to the newest line">
+        <input type="checkbox" data-autoscroll checked> auto-scroll
+      </label>
+      <button class="btn btn-sm btn-outline-secondary" type="button" data-terminal-clear title="Clear the view (logs stay saved)">Clear view</button>
+    </div>
+  </div>
+  <div class="terminal-body{% if tall %} tall{% endif %}" data-terminal-body>
+    <div class="terminal-empty">Waiting for log output…</div>
+  </div>
+</div>

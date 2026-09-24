@@ -1,0 +1,42 @@
+# Secrets & local configuration
+.env
+.env.*
+!.env.example
+
+# Databases (contain collected, potentially private data)
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+
+# Browser session data: cookies, local storage, authentication state
+browser_data/*
+!browser_data/.gitkeep
+
+# Exported data
+exports/*
+!exports/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Django
+staticfiles/
+media/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

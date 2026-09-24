@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Defaults{% endblock %}
+{% block page_title %}Defaults{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Your preferred baseline configuration – applied by “Reset to Defaults”</div>{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include "partials/setting_fields.html" %}
+          <div class="d-flex gap-2 mt-4 flex-wrap">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save Defaults</button>
+            <button class="btn btn-light" type="submit" name="action" value="reset" formnovalidate
+                    data-confirm-button="Restore the safe application defaults? Your saved defaults will be overwritten.">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">How defaults work</h2></div>
+      <div class="card-body small">
+        <ul class="mb-0 ps-3">
+          <li class="mb-2"><strong>Save Defaults</strong> stores this configuration as your baseline.</li>
+          <li class="mb-2"><strong>Reset to Defaults</strong> on the Run Scraper page copies these values into the active settings.</li>
+          <li><strong>Reset Defaults</strong> restores the built-in safe values: 20 posts per group, 10 groups per run,
+            20 scrolls, 2 s delay, 45 s page timeout, 2 retries, visible browser.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

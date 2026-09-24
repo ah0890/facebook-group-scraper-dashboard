@@ -1,0 +1,49 @@
+{% comment %}Renders the ScraperSettingForm in labelled sections. Used by Settings and Defaults.{% endcomment %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+<div class="settings-section">
+  <h6>Scraper</h6>
+  <div class="row g-3">
+    {% include "partials/setting_field.html" with field=form.scraper_mode col="col-md-6" %}
+    {% include "partials/setting_field.html" with field=form.posts_per_group col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.groups_per_run col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.scroll_limit col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.scroll_delay col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.page_timeout col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.retry_count col="col-md-3 col-6" %}
+    {% include "partials/setting_field.html" with field=form.save_frequency col="col-md-6" %}
+    {% include "partials/setting_field.html" with field=form.save_after_every_group col="col-md-6" %}
+  </div>
+</div>
+
+<div class="settings-section">
+  <h6>Browser</h6>
+  <div class="row g-3">
+    {% include "partials/setting_field.html" with field=form.browser_type col="col-md-4" %}
+    {% include "partials/setting_field.html" with field=form.headless col="col-md-4" %}
+    {% include "partials/setting_field.html" with field=form.auth_wait_seconds col="col-md-4" %}
+    {% include "partials/setting_field.html" with field=form.profile_dir col="col-12" %}
+  </div>
+</div>
+
+<div class="settings-section">
+  <h6>Storage</h6>
+  <div class="row g-3">
+    {% if database_path %}
+      <div class="col-md-6">
+        <label class="form-label">Database path</label>
+        <input type="text" class="form-control" value="{{ database_path }}" readonly>
+        <div class="form-text">Set with <code>DATABASE_URL</code> in <code>.env</code> (restart required).</div>
+      </div>
+    {% endif %}
+    {% include "partials/setting_field.html" with field=form.export_dir col="col-md-6" %}
+  </div>
+</div>
+
+<div class="settings-section">
+  <h6>Logging</h6>
+  <div class="row g-3">
+    {% include "partials/setting_field.html" with field=form.log_level col="col-md-4" %}
+    {% include "partials/setting_field.html" with field=form.log_retention_days col="col-md-4" %}
+  </div>
+</div>

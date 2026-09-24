@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Active configuration used by the next scraper run</div>{% endblock %}
+
+{% block content %}
+{% if active_run %}
+  <div class="alert alert-info"><i class="bi bi-info-circle"></i> Run #{{ active_run.pk }} is in progress. Changes apply to the next run.</div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include "partials/setting_fields.html" %}
+          <div class="d-flex gap-2 mt-4 flex-wrap">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Save settings</button>
+            <button class="btn btn-light" type="submit" name="action" value="load_defaults" formnovalidate
+                    data-confirm-button="Replace these settings with your saved defaults?">
+              <i class="bi bi-arrow-counterclockwise"></i> Load saved defaults
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">About these settings</h2></div>
+      <div class="card-body small">
+        <p><strong>Mock mode</strong> generates realistic fake posts so you can try the full workflow without Facebook.
+          The <code>SCRAPER_MODE</code> environment variable (currently <code>{{ env_mode }}</code>) sets the initial value.</p>
+        <p><strong>Playwright mode</strong> drives a real Chromium window using your own logged-in profile. Only scrape groups you are
+          a member of and are authorised to collect data from.</p>
+        <p class="mb-0"><strong>Be gentle.</strong> Groups are processed one at a time with a pause between scrolls. Keep the scroll
+          delay at 2 seconds or more and the posts-per-group modest.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Run #{{ run.pk }}{% endblock %}
+{% block page_title %}Run #{{ run.pk }}{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Round #{{ run.round_number }} · {{ run.get_mode_display }} · started {{ run.started_at|date:"M d, Y H:i:s" }} via {{ run.trigger }}</div>{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'logs' %}?run={{ run.pk }}" class="btn btn-light btn-sm"><i class="bi bi-list-ul"></i> Log table</a>
+  <a href="{% url 'posts' %}" class="btn btn-light btn-sm"><i class="bi bi-card-text"></i> Posts</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card stat-card">
+    <div class="stat-label">Status</div>
+    <div class="stat-value small-value">{% status_badge run.status run.get_status_display %}</div>
+    <div class="stat-meta">Phase: {{ run.current_phase }}</div>
+  </div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card">
+    <div class="stat-label">Groups</div>
+    <div class="stat-value num">{{ run.completed_groups }}/{{ run.total_groups }}</div>
+    <div class="stat-meta">{{ run.failed_groups }} failed · {{ run.skipped_groups }} skipped</div>
+  </div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card">
+    <div class="stat-label">New posts</div>
+    <div class="stat-value num">{{ run.total_posts|intcomma }}</div>
+    <div class="stat-meta">{{ run.duplicate_posts }} duplicates skipped</div>
+  </div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card">
+    <div class="stat-label">Duration</div>
+    <div class="stat-value num">{{ run.duration|duration }}</div>
+    <div class="stat-meta">{% if run.finished_at %}finished {{ run.finished_at|date:"H:i:s" }}{% else %}in progress{% endif %}</div>
+  </div></div>
+</div>
+{% if run.error_message %}<div class="alert alert-warning">{{ run.error_message }}</div>{% endif %}
+
+<div class="row g-3">
+  <div class="col-xl-5">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Groups in this run</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>#</th><th>Group</th><th class="text-end">New</th><th class="text-end">Dup.</th><th class="text-end">Tries</th><th class="text-end">Status</th></tr></thead>
+          <tbody>
+            {% for rg in run_groups %}
+              <tr>
+                <td class="row-num">{{ rg.position }}</td>
+                <td><div class="fw-semibold">{{ rg.group.name }}</div>
+                  {% if rg.error_message %}<div class="small text-danger">{{ rg.error_message|truncatechars:140 }}</div>{% endif %}</td>
+                <td class="text-end num">{{ rg.posts_collected }}</td>
+                <td class="text-end num">{{ rg.duplicates }}</td>
+                <td class="text-end num">{{ rg.attempts }}</td>
+                <td class="text-end">{% status_badge rg.status rg.get_status_display %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state">No groups.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    {% if run.is_active %}
+      {% include "partials/terminal.html" with title="Live Logs" run_id=run.pk live=True %}
+    {% else %}
+      {% include "partials/terminal.html" with title="Run log" run_id=run.pk %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

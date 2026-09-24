@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Posts{% endblock %}
+{% block page_title %}Posts{% endblock %}
+{% block page_subtitle %}<div class="subtitle">{{ total|intcomma }} post{{ total|pluralize }} match{{ total|pluralize:"es," }} the current filters</div>{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'export_csv' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-light btn-sm"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+  <a href="{% url 'export_json' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-light btn-sm"><i class="bi bi-filetype-json"></i> Export JSON</a>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end filter-bar">
+      <div class="col-md-3">
+        <label class="form-label" for="id_q">Keyword</label>
+        <input type="search" name="q" id="id_q" value="{{ form.q.value|default:'' }}" class="form-control" placeholder="Search text or author">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="id_group">Group</label>
+        <select name="group" id="id_group" class="form-select">
+          {% for value, label in form.fields.group.choices %}
+            <option value="{{ value }}" {% if value|stringformat:'s' == form.group.value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="id_author">Author</label>
+        <input type="text" name="author" id="id_author" value="{{ form.author.value|default:'' }}" class="form-control">
+      </div>
+      <div class="col-6 col-md-auto">
+        <label class="form-label" for="id_date_field">Date</label>
+        <select name="date_field" id="id_date_field" class="form-select">
+          <option value="collected">Collected</option>
+          <option value="posted" {% if form.date_field.value == 'posted' %}selected{% endif %}>Posted</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-auto">
+        <label class="form-label" for="id_date_from">From</label>
+        <input type="date" name="date_from" id="id_date_from" value="{{ form.date_from.value|default:'' }}" class="form-control">
+      </div>
+      <div class="col-6 col-md-auto">
+        <label class="form-label" for="id_date_to">To</label>
+        <input type="date" name="date_to" id="id_date_to" value="{{ form.date_to.value|default:'' }}" class="form-control">
+      </div>
+      <div class="col-6 col-md-auto">
+        <label class="form-label" for="id_sort">Sort</label>
+        <select name="sort" id="id_sort" class="form-select">
+          {% for value, label in form.fields.sort.choices %}
+            <option value="{{ value }}" {% if form.sort.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-auto d-flex gap-2">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+        <a href="{% url 'posts' %}" class="btn btn-light">Reset</a>
+      </div>
+    </form>
+    {% if form.errors %}<div class="text-danger small mt-2">Some filters were invalid and have been ignored.</div>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Author</th>
+          <th>Post</th>
+          <th>Post date</th>
+          <th class="text-end"><i class="bi bi-hand-thumbs-up" title="Likes"></i></th>
+          <th class="text-end"><i class="bi bi-chat" title="Comments"></i></th>
+          <th class="text-end"><i class="bi bi-share" title="Shares"></i></th>
+          <th>Collected</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in page %}
+          <tr>
+            <td class="text-nowrap"><a href="?{% query_transform group=post.group_id page='' %}" class="text-body">{{ post.group.name|truncatechars:28 }}</a></td>
+            <td class="text-nowrap">{{ post.author_name|default:"—" }}</td>
+            <td>
+              <div class="text-preview" title="{{ post.post_text|truncatechars:600 }}">{{ post.post_text|default:"(no text)"|truncatechars:280 }}</div>
+              {% if post.media_url %}<a href="{{ post.media_url }}" target="_blank" rel="noopener noreferrer" class="small"><i class="bi bi-image"></i> media</a>{% endif %}
+            </td>
+            <td class="text-nowrap small">
+              {% if post.post_timestamp %}{{ post.post_timestamp|date:"M d, Y H:i" }}{% else %}<span class="text-muted">{{ post.timestamp_text|default:"—" }}</span>{% endif %}
+            </td>
+            <td class="text-end num">{{ post.likes_count|intcomma }}</td>
+            <td class="text-end num">{{ post.comments_count|intcomma }}</td>
+            <td class="text-end num">{{ post.shares_count|intcomma }}</td>
+            <td class="text-nowrap small">{{ post.collected_at|date:"M d, H:i" }}</td>
+            <td>
+              {% if post.post_url %}
+                <a href="{{ post.post_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm" title="Open on Facebook"><i class="bi bi-box-arrow-up-right"></i></a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox"></i>No posts found. Start a scraper run to collect posts.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

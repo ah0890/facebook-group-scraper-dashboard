@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Stats{% endblock %}
+{% block page_title %}Stats{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Collection and run statistics</div>{% endblock %}
+{% block extra_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  {% with s=stats %}
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">Total groups</div><div class="stat-value num">{{ s.total_groups|intcomma }}</div>
+    <div class="stat-meta">{{ s.active_groups }} active</div></div></div>
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">Total posts</div><div class="stat-value num">{{ s.total_posts|intcomma }}</div>
+    <div class="stat-meta">{{ s.avg_posts_per_group }} avg / group</div></div></div>
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">Today</div><div class="stat-value num">{{ s.posts_today|intcomma }}</div>
+    <div class="stat-meta">posts collected</div></div></div>
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">This week</div><div class="stat-value num">{{ s.posts_week|intcomma }}</div>
+    <div class="stat-meta">posts collected</div></div></div>
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">This month</div><div class="stat-value num">{{ s.posts_month|intcomma }}</div>
+    <div class="stat-meta">posts collected</div></div></div>
+  <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card">
+    <div class="stat-label">Avg run</div><div class="stat-value num">{{ s.avg_run_duration|duration }}</div>
+    <div class="stat-meta">{{ s.avg_posts_per_run }} posts / run</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card">
+    <div class="stat-label"><span class="stat-icon tint-green"><i class="bi bi-check2-circle"></i></span> Successful runs</div>
+    <div class="stat-value num">{{ s.successful_runs }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card">
+    <div class="stat-label"><span class="stat-icon tint-amber"><i class="bi bi-exclamation-circle"></i></span> Partial runs</div>
+    <div class="stat-value num">{{ s.partial_runs }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card">
+    <div class="stat-label"><span class="stat-icon tint-red"><i class="bi bi-x-circle"></i></span> Failed runs</div>
+    <div class="stat-value num">{{ s.failed_runs }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card">
+    <div class="stat-label"><span class="stat-icon tint-slate"><i class="bi bi-stop-circle"></i></span> Stopped runs</div>
+    <div class="stat-value num">{{ s.stopped_runs }}</div></div></div>
+  {% endwith %}
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-xl-7">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Posts collected · last 30 days</h2></div>
+      <div class="card-body"><div style="height: 280px"><canvas id="chart-posts" aria-label="Posts collected per day" role="img"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Runs · last 30 days</h2></div>
+      <div class="card-body"><div style="height: 280px"><canvas id="chart-runs" aria-label="Runs per day by outcome" role="img"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Posts by group</h2></div>
+      <div class="card-body"><div style="height: 320px"><canvas id="chart-groups" aria-label="Posts per group" role="img"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Top groups</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Group</th><th class="text-end">Posts</th><th>Last run</th></tr></thead>
+          <tbody>
+            {% for g in top_groups %}
+              <tr><td class="fw-semibold">{{ g.name }}</td><td class="text-end num">{{ g.total_posts|intcomma }}</td>
+                <td class="small text-nowrap">{{ g.last_run_at|naturaltime|default:"Never" }}</td></tr>
+            {% empty %}
+              <tr><td colspan="3"><div class="empty-state">No groups yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}

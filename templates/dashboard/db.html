@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Database{% endblock %}
+{% block page_title %}Database{% endblock %}
+{% block page_subtitle %}<div class="subtitle">SQLite storage information and maintenance</div>{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'admin:index' %}" class="btn btn-light btn-sm"><i class="bi bi-shield-lock"></i> Django admin</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Storage</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted fw-normal">Engine</dt><dd class="col-sm-8">SQLite {{ sqlite_version }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">File</dt><dd class="col-sm-8"><code class="text-break">{{ db_path }}</code></dd>
+          <dt class="col-sm-4 text-muted fw-normal">Size</dt><dd class="col-sm-8">{{ db_size|filesizeformat }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">Write-ahead log</dt><dd class="col-sm-8">{{ wal_size|filesizeformat }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">Journal mode</dt><dd class="col-sm-8">{{ journal_mode|upper }}</dd>
+          <dt class="col-sm-4 text-muted fw-normal">Oldest log</dt><dd class="col-sm-8">{{ oldest_log|default:"—" }}</dd>
+        </dl>
+        <form method="post" class="mt-3" data-confirm="Optimise the database now?">
+          {% csrf_token %}
+          <button class="btn btn-light btn-sm" type="submit"><i class="bi bi-lightning-charge"></i> Optimise &amp; checkpoint</button>
+        </form>
+        <p class="small text-muted mt-3 mb-0">
+          The database contains collected posts – treat it as private data. It is excluded from git via <code>.gitignore</code>.
+          Back it up by copying the file while the scraper is stopped.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Tables</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Table</th><th class="text-end">Rows</th></tr></thead>
+          <tbody>
+            {% for name, count in tables %}
+              <tr><td>{{ name }}</td><td class="text-end num">{{ count|intcomma }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

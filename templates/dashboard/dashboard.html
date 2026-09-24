@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}<div class="subtitle">Overview of groups, collected posts and scraper activity</div>{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'run_scraper' %}" class="btn btn-primary btn-sm"><i class="bi bi-play-fill"></i> Run Scraper</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-4 col-xl">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-blue"><i class="bi bi-people"></i></span> Total groups</div>
+      <div class="stat-value num">{{ summary.total_groups|intcomma }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-green"><i class="bi bi-toggle-on"></i></span> Enabled</div>
+      <div class="stat-value num">{{ summary.enabled_groups|intcomma }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-cyan"><i class="bi bi-card-text"></i></span> Posts</div>
+      <div class="stat-value num">{{ summary.total_posts|intcomma }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-amber"><i class="bi bi-calendar-day"></i></span> Today</div>
+      <div class="stat-value num">{{ summary.posts_today|intcomma }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-slate"><i class="bi bi-arrow-repeat"></i></span> Runs</div>
+      <div class="stat-value num">{{ summary.total_runs|intcomma }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-xl-4">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-slate"><i class="bi bi-clock-history"></i></span> Last run</div>
+      {% if summary.last_run %}
+        <div class="stat-value small-value">
+          <a href="{% url 'run_detail' summary.last_run.pk %}">#{{ summary.last_run.pk }}</a>
+          · {{ summary.last_run.finished_at|default:summary.last_run.started_at|naturaltime }}
+          <span class="badge {{ summary.last_run.status|badge_class }} ms-1">{{ summary.last_run.get_status_display }}</span>
+        </div>
+        <div class="stat-meta">{{ summary.last_run.total_posts }} new posts · {{ summary.last_run.completed_groups }}/{{ summary.last_run.total_groups }} groups</div>
+      {% else %}
+        <div class="stat-value small-value text-muted">Never</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="card stat-card" data-live-status-card>
+      <div class="stat-label"><span class="stat-icon tint-blue"><i class="bi bi-activity"></i></span> Current status</div>
+      <div class="phase-display mt-2">
+        <span class="phase-badge{% if active_run %} phase-active{% endif %}" data-phase>{{ current_phase }}</span>
+        <span class="text-muted small" data-status-detail>
+          {% if active_run %}Run #{{ active_run.pk }} · {{ active_run.completed_groups }}/{{ active_run.total_groups }} groups{% else %}Scraper idle{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card stat-card">
+      <div class="stat-label"><span class="stat-icon tint-green"><i class="bi bi-list-check"></i></span> Next batch</div>
+      <div class="stat-meta mt-2 text-body">{{ batch.message }}</div>
+      <div class="mt-2"><a href="{% url 'run_scraper' %}" class="small">Open Run Scraper <i class="bi bi-arrow-right"></i></a></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Recent Scraper Runs</h2>
+    <div class="header-actions"><a href="{% url 'logs' %}" class="btn btn-light btn-sm"><i class="bi bi-terminal"></i> Logs</a></div>
+  </div>
+  {% include "partials/runs_table.html" with runs=recent_runs %}
+</div>
+{% endblock %}

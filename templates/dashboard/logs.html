@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load dashboard_tags humanize %}
+{% block title %}Logs{% endblock %}
+{% block page_title %}Logs{% endblock %}
+{% block page_subtitle %}<div class="subtitle">{{ total|intcomma }} log entr{{ total|pluralize:"y,ies" }}</div>{% endblock %}
+{% block page_actions %}
+  <button class="btn btn-light btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#clear-logs-modal">
+    <i class="bi bi-trash"></i> Clear old logs
+  </button>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end filter-bar">
+      <div class="col-md-3">
+        <label class="form-label" for="id_q">Search</label>
+        <input type="search" name="q" id="id_q" value="{{ form.q.value|default:'' }}" class="form-control" placeholder="Message text">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label" for="id_run">Run</label>
+        <select name="run" id="id_run" class="form-select">
+          {% for value, label in form.fields.run.choices %}
+            <option value="{{ value }}" {% if value|stringformat:'s' == form.run.value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label" for="id_group">Group</label>
+        <select name="group" id="id_group" class="form-select">
+          {% for value, label in form.fields.group.choices %}
+            <option value="{{ value }}" {% if value|stringformat:'s' == form.group.value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-auto">
+        <label class="form-label" for="id_level">Level</label>
+        <select name="level" id="id_level" class="form-select">
+          {% for value, label in form.fields.level.choices %}
+            <option value="{{ value }}" {% if form.level.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-auto">
+        <label class="form-label" for="id_phase">Phase</label>
+        <select name="phase" id="id_phase" class="form-select">
+          {% for value, label in form.fields.phase.choices %}
+            <option value="{{ value }}" {% if form.phase.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-auto">
+        <label class="form-label" for="id_date">Date</label>
+        <input type="date" name="date" id="id_date" value="{{ form.date.value|default:'' }}" class="form-control">
+      </div>
+      <div class="col-md-auto d-flex gap-2">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+        <a href="{% url 'logs' %}" class="btn btn-light">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle log-table">
+      <thead><tr><th>Time</th><th>Level</th><th>Phase</th><th>Run</th><th>Group</th><th>Message</th></tr></thead>
+      <tbody>
+        {% for entry in page %}
+          <tr>
+            <td class="text-nowrap small num">{{ entry.timestamp|date:"Y-m-d H:i:s" }}</td>
+            <td>{% status_badge entry.level entry.get_level_display %}</td>
+            <td class="small text-muted">{{ entry.phase }}</td>
+            <td class="small">{% if entry.run_id %}<a href="{% url 'run_detail' entry.run_id %}">#{{ entry.run_id }}</a>{% endif %}</td>
+            <td class="small text-nowrap">{{ entry.group.name|default:""|truncatechars:26 }}</td>
+            <td class="msg-cell">{{ entry.message }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><i class="bi bi-terminal"></i>No log entries match.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</div>
+
+<div class="modal fade" id="clear-logs-modal" tabindex="-1" aria-labelledby="clear-logs-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'logs_clear' %}">
+      {% csrf_token %}
+      <div class="modal-header">
+        <h5 class="modal-title" id="clear-logs-title">Clear old logs</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label" for="id_days">Delete entries older than (days)</label>
+        <input type="number" name="days" id="id_days" min="0" max="3650" value="{{ clear_form.days.value }}" class="form-control" required>
+        <div class="form-text">{{ clear_form.days.help_text }}</div>
+        <div class="form-check mt-3">
+          <input class="form-check-input" type="checkbox" name="confirm" id="id_confirm" required>
+          <label class="form-check-label" for="id_confirm">{{ clear_form.confirm.label }}</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete logs</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

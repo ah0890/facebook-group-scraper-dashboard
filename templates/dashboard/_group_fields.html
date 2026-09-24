@@ -1,0 +1,29 @@
+{% if form.non_field_errors %}<div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>{% endif %}
+<div class="row g-3">
+  <div class="col-md-5">
+    <label class="form-label" for="{{ form.name.id_for_label }}">Group name</label>
+    <input type="text" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}"
+           class="form-control{% if form.name.errors %} is-invalid{% endif %}" maxlength="200" required
+           placeholder="{{ form.name.field.widget.attrs.placeholder }}">
+    {{ form.name.errors }}
+  </div>
+  <div class="col-md-7">
+    <label class="form-label" for="{{ form.facebook_url.id_for_label }}">Facebook URL</label>
+    <input type="url" name="{{ form.facebook_url.html_name }}" id="{{ form.facebook_url.id_for_label }}" value="{{ form.facebook_url.value|default:'' }}"
+           class="form-control{% if form.facebook_url.errors %} is-invalid{% endif %}" maxlength="500" required
+           placeholder="https://www.facebook.com/groups/…">
+    {{ form.facebook_url.errors }}
+    <div class="form-text">{{ form.facebook_url.help_text }}</div>
+  </div>
+  <div class="col-md-9">
+    <label class="form-label" for="{{ form.notes.id_for_label }}">Notes</label>
+    <textarea name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}" rows="2" class="form-control" placeholder="Optional notes">{{ form.notes.value|default:'' }}</textarea>
+  </div>
+  <div class="col-md-3 d-flex align-items-end">
+    <div class="form-check form-switch mb-2">
+      <input class="form-check-input" type="checkbox" role="switch" name="{{ form.enabled.html_name }}" id="{{ form.enabled.id_for_label }}"
+             {% if form.enabled.value %}checked{% endif %}>
+      <label class="form-check-label" for="{{ form.enabled.id_for_label }}">Enabled</label>
+    </div>
+  </div>
+</div>
